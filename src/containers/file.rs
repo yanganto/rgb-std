@@ -193,3 +193,27 @@ impl Display for UniversalFile {
         }
     }
 }
+
+#[cfg(all(test, feature = "fs"))]
+mod test {
+    use super::*;
+    static DEFAULT_KIT_PATH: &str  = "asset/kit.default";
+
+    #[test]
+    fn kit_save_load_round_trip() {
+        use crate::containers::Kit;
+        use std::fs::OpenOptions;
+
+        let mut kit_file = OpenOptions::new().read(true).open(DEFAULT_KIT_PATH).unwrap();
+        let kit = Kit::load(kit_file).expect("fail to load kit.default");
+        let default_kit = Kit::default();
+        assert_eq!(kit, default_kit, "kit default is not same as before");
+
+        kit_file = OpenOptions::new().write(true).open(DEFAULT_KIT_PATH).unwrap();
+        default_kit.save(kit_file).expect("fail to export kit");
+
+        kit_file = OpenOptions::new().read(true).open(DEFAULT_KIT_PATH).unwrap();
+        let kit = Kit::load(kit_file).expect("fail to load kit.default");
+        assert_eq!(kit, default_kit, "kit roudtrip not work");
+    }
+}
